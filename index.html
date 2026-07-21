@@ -14,7 +14,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             height: 8px;
             width: 8px;
@@ -30,7 +29,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        /* Grid cell fixed sizes */
         .gantt-col {
             min-width: 32px;
             max-width: 32px;
@@ -75,8 +73,8 @@
                     <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 transition duration-150 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-slate-700">
                         <i class="fa-solid fa-print mr-2"></i> Cetak / PDF
                     </button>
-                    <button onclick="resetToDefault()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition duration-150 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-rose-500/20">
-                        <i class="fa-solid fa-rotate mr-2"></i> Reset Data
+                    <button onclick="fetchTasksFromSheets()" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 transition duration-150 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-indigo-500/30">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i> Muat Ulang
                     </button>
                 </div>
             </div>
@@ -88,7 +86,6 @@
                 <i class="fa-solid fa-sliders text-indigo-500"></i> Kontrol Panel & Filter Cepat
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Search bar -->
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1.5">Cari Kegiatan</label>
                     <div class="relative">
@@ -100,7 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Filter PIC -->
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1.5">Saring Berdasarkan PIC Utama</label>
                     <select id="picFilter" onchange="applyFilters()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white">
@@ -115,7 +111,6 @@
                     </select>
                 </div>
 
-                <!-- Filter Category -->
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1.5">Saring Berdasarkan Kategori</label>
                     <select id="categoryFilter" onchange="applyFilters()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white">
@@ -147,18 +142,21 @@
             </div>
         </section>
 
+        <!-- LOADING INDICATOR -->
+        <div id="loadingState" class="hidden flex items-center justify-center p-8 bg-white rounded-xl shadow-md border border-slate-100 mb-8 gap-3 text-indigo-600 font-semibold text-sm">
+            <i class="fa-solid fa-spinner animate-spin text-xl"></i> Menghubungkan ke Google Sheets...
+        </div>
+
         <!-- VIEW 1: DYNAMIC GANTT CHART TABLE -->
         <main id="ganttViewContainer" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mb-8 transition-opacity duration-300">
             <div class="overflow-x-auto custom-scrollbar w-full">
                 <table class="w-full border-collapse text-left" id="ganttTable">
                     <thead>
-                        <!-- Month Header Row -->
                         <tr class="bg-indigo-950 text-slate-200 text-xs font-bold uppercase tracking-wider divide-x divide-indigo-900 border-b border-indigo-900">
                             <th colspan="4" class="px-4 py-3 bg-indigo-950 sticky left-0 z-20 shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)] text-center">Informasi Kegiatan</th>
                             <th colspan="22" class="px-2 py-3 text-center bg-indigo-950">Agustus 2026</th>
                             <th colspan="13" class="px-2 py-3 text-center bg-indigo-900/40">September 2026</th>
                         </tr>
-                        <!-- Day Grid Headers -->
                         <tr id="dayGridHeader" class="bg-slate-900 text-slate-300 font-mono text-center text-xs divide-x divide-slate-800 border-b border-slate-800">
                             <th class="px-3 py-2 bg-slate-900 sticky left-0 z-20 text-center w-12 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">No</th>
                             <th class="px-4 py-2 bg-slate-900 sticky left-[48px] z-20 text-left min-w-[140px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Tanggal</th>
@@ -167,12 +165,10 @@
                         </tr>
                     </thead>
                     <tbody id="ganttTableBody" class="divide-y divide-slate-100 text-sm font-medium">
-                        <!-- Dynamic items will be appended via JS -->
                     </tbody>
                 </table>
             </div>
             
-            <!-- Empty state -->
             <div id="emptyState" class="hidden flex flex-col items-center justify-center p-16 text-center text-slate-400">
                 <i class="fa-regular fa-folder-open text-5xl mb-3 text-slate-300"></i>
                 <p class="font-medium text-slate-500">Tidak ada kegiatan yang sesuai dengan pencarian Anda.</p>
@@ -182,16 +178,14 @@
 
         <!-- VIEW 2: RESPONSIVE CARDS VIEW -->
         <main id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <!-- Dynamically populated card blocks -->
         </main>
 
-        <!-- COLOR LEGENDS & EXPLANATION -->
+        <!-- COLOR LEGENDS -->
         <section class="bg-white rounded-xl shadow-md border border-slate-100 p-6 mb-12">
             <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                 <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
                     <i class="fa-solid fa-palette text-indigo-600"></i> Keterangan & Penjelasan Kategori Warna
                 </h3>
-                <span class="text-xs text-slate-400">Warna pada bagan mewakili jenis kegiatan</span>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -262,7 +256,7 @@
         </section>
     </div>
 
-    <!-- DYNAMIC POPUP MODAL (Add / Edit Kegiatan) -->
+    <!-- DYNAMIC POPUP MODAL -->
     <div id="taskModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden">
             <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
@@ -323,7 +317,7 @@
                         <button type="button" onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
                             Batal
                         </button>
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/15 transition">
+                        <button type="submit" id="saveSubmitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/15 transition flex items-center gap-2">
                             Simpan Perubahan
                         </button>
                     </div>
@@ -342,37 +336,13 @@
     </div>
 
     <script>
-        const defaultKKNTasks = [
-            { id: 1, text: "Kedatangan di lokasi KKN, pembagian tempat tinggal, koordinasi internal", start: "2026-08-10", end: "2026-08-10", pic: "Ketua, Sekretaris", category: "persiapan" },
-            { id: 2, text: "Silaturahmi dengan perangkat desa dan tokoh masyarakat", start: "2026-08-11", end: "2026-08-11", pic: "Ketua, Humas", category: "persiapan" },
-            { id: 3, text: "Survei lingkungan, observasi potensi dan permasalahan desa", start: "2026-08-12", end: "2026-08-12", pic: "Seluruh anggota", category: "persiapan" },
-            { id: 4, text: "Penyusunan dan finalisasi program kerja", start: "2026-08-13", end: "2026-08-13", pic: "Ketua, Sekretaris, Seluruh anggota", category: "persiapan" },
-            { id: 5, text: "Persiapan administrasi, surat-menyurat, kebutuhan perlengkapan", start: "2026-08-14", end: "2026-08-14", pic: "Sekretaris, Perkap", category: "administrasi" },
-            { id: 6, text: "Publikasi kedatangan dan perkenalan tim KKN di media sosial", start: "2026-08-15", end: "2026-08-15", pic: "PDD/Social Media", category: "publikasi" },
-            { id: 7, text: "Pelaksanaan Program Kerja Minggu I", start: "2026-08-16", end: "2026-08-22", pic: "Ketua (koordinator), seluruh anggota", category: "pelaksanaan" },
-            { id: 8, text: "Dokumentasi kegiatan harian dan publikasi media sosial", start: "2026-08-16", end: "2026-08-22", pic: "PDD/Social Media", category: "publikasi" },
-            { id: 9, text: "Koordinasi dengan mitra, perangkat desa, dan masyarakat", start: "2026-08-16", end: "2026-08-22", pic: "Humas", category: "persiapan" },
-            { id: 10, text: "Pengelolaan anggaran kegiatan KKN", start: "2026-08-16", end: "2026-08-22", pic: "Bendahara", category: "administrasi" },
-            { id: 11, text: "Penyediaan alat dan logistik kegiatan", start: "2026-08-16", end: "2026-08-22", pic: "Perkap", category: "perlengkapan" },
-            { id: 12, text: "Evaluasi Minggu I dan penyusunan laporan perkembangan", start: "2026-08-23", end: "2026-08-23", pic: "Ketua, Sekretaris", category: "evaluasi" },
-            { id: 13, text: "Pelaksanaan Program Kerja Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Seluruh anggota", category: "pelaksanaan" },
-            { id: 14, text: "Dokumentasi dan publikasi kegiatan Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "PDD/Social Media", category: "publikasi" },
-            { id: 15, text: "Koordinasi peserta dan stakeholder program II", start: "2026-08-24", end: "2026-08-30", pic: "Humas", category: "persiapan" },
-            { id: 16, text: "Monitoring penggunaan dana Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Bendahara", category: "administrasi" },
-            { id: 17, text: "Pengadaan perlengkapan tambahan Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Perkap", category: "perlengkapan" },
-            { id: 18, text: "Evaluasi Minggu II, revisi jadwal bila diperlukan", start: "2026-08-31", end: "2026-08-31", pic: "Ketua, Seluruh anggota", category: "evaluasi" },
-            { id: 19, text: "Pelaksanaan Program Kerja Minggu III dan penyelesaian program utama", start: "2026-09-01", end: "2026-09-07", pic: "Seluruh anggota", category: "pelaksanaan" },
-            { id: 20, text: "Pembuatan dokumentasi akhir (foto, video, konten)", start: "2026-09-01", end: "2026-09-07", pic: "PDD/Social Media", category: "publikasi" },
-            { id: 21, text: "Penyusunan laporan administrasi dan keuangan", start: "2026-09-01", end: "2026-09-07", pic: "Sekretaris, Bendahara", category: "administrasi" },
-            { id: 22, text: "Penyelesaian program lanjutan, serah hasil kegiatan kepada desa", start: "2026-09-08", end: "2026-09-10", pic: "Ketua, Humas", category: "penutupan" },
-            { id: 23, text: "Penyusunan laporan akhir kelompok dan inventarisasi perlengkapan", start: "2026-09-11", end: "2026-09-11", pic: "Ketua, Sekretaris, Perkap", category: "administrasi" },
-            { id: 24, text: "Perpisahan dengan masyarakat dan penutupan kegiatan desa", start: "2026-09-12", end: "2026-09-12", pic: "Seluruh anggota", category: "penutupan" },
-            { id: 25, text: "Kepulangan dan evaluasi akhir kelompok", start: "2026-09-13", end: "2026-09-13", pic: "Seluruh anggota", category: "kepulangan" }
-        ];
+        // =========================================================================
+        // URL WEB APP DARI GOOGLE APPS SCRIPT KAMU
+        // =========================================================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH7OsGLO4EnrMx1hSm0uD5oNMEku1VYYKck3jVJgZfy9WDM2Q06KwPw9G293I6jlEz/exec";
 
         let tasks = [];
 
-        // Pemetaan warna berdasarkan kategori
         const categoryConfig = {
             persiapan: { bg: 'bg-indigo-600', hover: 'hover:bg-indigo-700', text: 'text-indigo-600', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
             pelaksanaan: { bg: 'bg-emerald-500', hover: 'hover:bg-emerald-600', text: 'text-emerald-600', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
@@ -406,15 +376,23 @@
         window.onload = function() {
             generateCalendarDates();
             loadHeaderDays();
-            
-            const savedTasks = localStorage.getItem('kkn_tasks_storage');
-            if (savedTasks) {
-                tasks = JSON.parse(savedTasks);
-            } else {
-                tasks = [...defaultKKNTasks];
+            fetchTasksFromSheets();
+        }
+
+        // AMBIL DATA DARI GOOGLE SHEETS
+        async function fetchTasksFromSheets() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                tasks = data;
+                renderTimeline();
+            } catch (err) {
+                showToast("Gagal mengambil data dari Google Sheets!", "error");
+                console.error(err);
+            } finally {
+                document.getElementById('loadingState').classList.add('hidden');
             }
-            
-            renderTimeline();
         }
 
         function loadHeaderDays() {
@@ -494,7 +472,6 @@
                     </td>
                 `;
 
-                // Render Blok Warna Kategori di Tabel
                 totalDates.forEach(dateObj => {
                     const tdCell = document.createElement('td');
                     tdCell.className = 'gantt-col border-r border-slate-100/70 p-1 text-center align-middle relative h-full';
@@ -511,7 +488,7 @@
 
                 tableBody.appendChild(tr);
 
-                /* TAMPILAN KARTU (MOBILE) */
+                /* TAMPILAN KARTU */
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-xl border border-slate-150 p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-150 flex flex-col justify-between cursor-pointer';
                 card.onclick = () => openEditModal(task.id);
@@ -574,7 +551,7 @@
         }
 
         function openEditModal(id) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks.find(t => t.id == id);
             if (!task) return;
 
             document.getElementById('taskId').value = task.id;
@@ -591,10 +568,11 @@
 
         function closeModal() { document.getElementById('taskModal').classList.add('hidden'); }
 
-        function saveTask(event) {
+        // SIMPAN / EDIT KE GOOGLE SHEETS
+        async function saveTask(event) {
             event.preventDefault();
             
-            const id = document.getElementById('taskId').value;
+            const id = document.getElementById('taskId').value || Date.now().toString();
             const text = document.getElementById('taskText').value;
             const start = document.getElementById('taskStart').value;
             const end = document.getElementById('taskEnd').value;
@@ -606,44 +584,63 @@
                 return;
             }
 
-            if (id) {
-                const index = tasks.findIndex(t => t.id == id);
-                if (index !== -1) {
-                    tasks[index] = { id: parseInt(id), text, start, end, pic, category };
-                    showToast("Kegiatan KKN berhasil diperbarui!");
-                }
-            } else {
-                const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
-                tasks.push({ id: newId, text, start, end, pic, category });
-                showToast("Kegiatan KKN berhasil ditambahkan!");
-            }
+            const payload = {
+                action: "save",
+                task: { id, text, start, end, pic, category }
+            };
 
-            saveData();
-            closeModal();
-            renderTimeline();
+            const submitBtn = document.getElementById('saveSubmitBtn');
+            submitBtn.innerText = "Menyimpan...";
+            submitBtn.disabled = true;
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                showToast("Data berhasil disimpan ke Google Sheets!");
+                closeModal();
+                setTimeout(fetchTasksFromSheets, 1500); // Refetch data
+            } catch (err) {
+                showToast("Gagal menyimpan ke Google Sheets!", "error");
+                console.error(err);
+            } finally {
+                submitBtn.innerText = "Simpan Perubahan";
+                submitBtn.disabled = false;
+            }
         }
 
-        function deleteTask() {
+        // HAPUS DARI GOOGLE SHEETS
+        async function deleteTask() {
             const id = document.getElementById('taskId').value;
             if (!id) return;
 
-            tasks = tasks.filter(t => t.id != id);
-            showToast("Kegiatan berhasil dihapus!");
-            saveData();
-            closeModal();
-            renderTimeline();
-        }
+            if (!confirm("Apakah Anda yakin ingin menghapus kegiatan ini?")) return;
 
-        function resetToDefault() {
-            if (confirm("Apakah Anda yakin ingin menyetel ulang data timeline ke pengaturan bawaan awal?")) {
-                tasks = [...defaultKKNTasks];
-                saveData();
-                renderTimeline();
-                showToast("Data disetel ulang ke default kelompok.");
+            const payload = {
+                action: "delete",
+                task: { id }
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                showToast("Kegiatan berhasil dihapus!");
+                closeModal();
+                setTimeout(fetchTasksFromSheets, 1500);
+            } catch (err) {
+                showToast("Gagal menghapus dari Google Sheets!", "error");
+                console.error(err);
             }
         }
-
-        function saveData() { localStorage.setItem('kkn_tasks_storage', JSON.stringify(tasks)); }
 
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
