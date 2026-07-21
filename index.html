@@ -11,15 +11,37 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .gantt-col { min-width: 32px; max-width: 32px; width: 32px; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .gantt-col {
+            min-width: 32px;
+            max-width: 32px;
+            width: 32px;
+        }
         @media print {
-            .no-print { display: none !important; }
-            body { background: white; color: black; }
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                color: black;
+            }
         }
     </style>
 </head>
@@ -51,7 +73,7 @@
                     <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 transition duration-150 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-slate-700">
                         <i class="fa-solid fa-print mr-2"></i> Cetak / PDF
                     </button>
-                    <button onclick="fetchTasksFromSheetDB()" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 transition duration-150 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-indigo-500/30">
+                    <button onclick="fetchTasksFromSheets()" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 transition duration-150 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-indigo-500/30">
                         <i class="fa-solid fa-arrows-rotate mr-2"></i> Muat Ulang
                     </button>
                 </div>
@@ -122,7 +144,7 @@
 
         <!-- LOADING INDICATOR -->
         <div id="loadingState" class="hidden flex items-center justify-center p-8 bg-white rounded-xl shadow-md border border-slate-100 mb-8 gap-3 text-indigo-600 font-semibold text-sm">
-            <i class="fa-solid fa-spinner animate-spin text-xl"></i> Menghubungkan ke SheetDB...
+            <i class="fa-solid fa-spinner animate-spin text-xl"></i> Menghubungkan ke Google Sheets...
         </div>
 
         <!-- VIEW 1: DYNAMIC GANTT CHART TABLE -->
@@ -314,8 +336,10 @@
     </div>
 
     <script>
-        // API URL SHEETDB KAMU
-        const SHEETDB_URL = "https://sheetdb.io/api/v1/ty95tyd8xmmra";
+        // =========================================================================
+        // URL WEB APP DARI GOOGLE APPS SCRIPT KAMU
+        // =========================================================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH7OsGLO4EnrMx1hSm0uD5oNMEku1VYYKck3jVJgZfy9WDM2Q06KwPw9G293I6jlEz/exec";
 
         let tasks = [];
 
@@ -352,15 +376,14 @@
         window.onload = function() {
             generateCalendarDates();
             loadHeaderDays();
-            fetchTasksFromSheetDB();
+            fetchTasksFromSheets();
         }
 
-        // AMBIL DATA DARI SHEETDB
-        async function fetchTasksFromSheetDB() {
+        // AMBIL DATA DARI GOOGLE SHEETS
+        async function fetchTasksFromSheets() {
             document.getElementById('loadingState').classList.remove('hidden');
             try {
-                const res = await fetch(SHEETDB_URL);
-                if(!res.ok) throw new Error("Gagal mengambil data");
+                const res = await fetch(SCRIPT_URL);
                 const data = await res.json();
                 tasks = data;
                 renderTimeline();
@@ -391,7 +414,6 @@
         }
 
         function formatDateRange(startStr, endStr) {
-            if(!startStr || !endStr) return "";
             const start = new Date(startStr);
             const end = new Date(endStr);
             const options = { day: 'numeric', month: 'short' };
@@ -414,16 +436,12 @@
             cardsContainer.innerHTML = '';
 
             const filteredTasks = tasks.filter(task => {
-                const text = task.text || '';
-                const pic = task.pic || '';
-                const category = task.category || '';
-
-                const matchesSearch = text.toLowerCase().includes(searchVal) || 
-                                      pic.toLowerCase().includes(searchVal) || 
+                const matchesSearch = task.text.toLowerCase().includes(searchVal) || 
+                                      task.pic.toLowerCase().includes(searchVal) || 
                                       formatDateRange(task.start, task.end).toLowerCase().includes(searchVal);
                 
-                const matchesPic = picFilter === 'all' || pic.toLowerCase().includes(picFilter.toLowerCase());
-                const matchesCat = catFilter === 'all' || category === catFilter;
+                const matchesPic = picFilter === 'all' || task.pic.toLowerCase().includes(picFilter.toLowerCase());
+                const matchesCat = catFilter === 'all' || task.category === catFilter;
 
                 return matchesSearch && matchesPic && matchesCat;
             });
@@ -478,7 +496,7 @@
                     <div>
                         <div class="flex items-start justify-between gap-2 mb-3">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${config.badge}">
-                                ${(task.category || '').toUpperCase()}
+                                ${task.category.toUpperCase()}
                             </span>
                             <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
                                 <i class="fa-regular fa-calendar text-slate-400"></i> ${formattedDate}
@@ -550,14 +568,11 @@
 
         function closeModal() { document.getElementById('taskModal').classList.add('hidden'); }
 
-        // SIMPAN / EDIT KE SHEETDB
+        // SIMPAN / EDIT KE GOOGLE SHEETS
         async function saveTask(event) {
             event.preventDefault();
             
-            const taskId = document.getElementById('taskId').value;
-            const isEdit = Boolean(taskId);
-            const id = isEdit ? taskId : Date.now().toString();
-            
+            const id = document.getElementById('taskId').value || Date.now().toString();
             const text = document.getElementById('taskText').value;
             const start = document.getElementById('taskStart').value;
             const end = document.getElementById('taskEnd').value;
@@ -569,34 +584,28 @@
                 return;
             }
 
-            const taskData = { id, text, start, end, pic, category };
+            const payload = {
+                action: "save",
+                task: { id, text, start, end, pic, category }
+            };
 
             const submitBtn = document.getElementById('saveSubmitBtn');
             submitBtn.innerText = "Menyimpan...";
             submitBtn.disabled = true;
 
             try {
-                if (isEdit) {
-                    // Update data yang ada
-                    await fetch(`${SHEETDB_URL}/id/${id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: taskData })
-                    });
-                } else {
-                    // Tambah data baru
-                    await fetch(SHEETDB_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [taskData] })
-                    });
-                }
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
                 showToast("Data berhasil disimpan ke Google Sheets!");
                 closeModal();
-                fetchTasksFromSheetDB(); // Reload data langsung
+                setTimeout(fetchTasksFromSheets, 1500); // Refetch data
             } catch (err) {
-                showToast("Gagal menyimpan data!", "error");
+                showToast("Gagal menyimpan ke Google Sheets!", "error");
                 console.error(err);
             } finally {
                 submitBtn.innerText = "Simpan Perubahan";
@@ -604,24 +613,31 @@
             }
         }
 
-        // HAPUS DARI SHEETDB
+        // HAPUS DARI GOOGLE SHEETS
         async function deleteTask() {
             const id = document.getElementById('taskId').value;
             if (!id) return;
 
             if (!confirm("Apakah Anda yakin ingin menghapus kegiatan ini?")) return;
 
+            const payload = {
+                action: "delete",
+                task: { id }
+            };
+
             try {
-                await fetch(`${SHEETDB_URL}/id/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
                 showToast("Kegiatan berhasil dihapus!");
                 closeModal();
-                fetchTasksFromSheetDB(); // Reload data langsung
+                setTimeout(fetchTasksFromSheets, 1500);
             } catch (err) {
-                showToast("Gagal menghapus kegiatan!", "error");
+                showToast("Gagal menghapus dari Google Sheets!", "error");
                 console.error(err);
             }
         }
