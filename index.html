@@ -29,9 +29,12 @@
                     <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Timeline KKN dusun Tritis</h1>
                     <p class="text-slate-300 text-sm sm:text-base mt-2">Periode Kegiatan: 10 Agustus - 13 September 2026</p>
                 </div>
-                <div>
-                    <button onclick="fetchTasks()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center transition shadow-lg">
+                <div class="flex flex-wrap gap-2.5">
+                    <button onclick="fetchTasks()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center transition shadow-lg">
                         <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
+                    </button>
+                    <button onclick="addNewRow()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center transition shadow-lg">
+                        <i class="fa-solid fa-plus mr-2"></i> Tambah Kegiatan
                     </button>
                 </div>
             </div>
@@ -39,11 +42,11 @@
 
         <!-- INFO BAR -->
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 text-emerald-900 text-xs sm:text-sm flex items-center gap-2.5">
-            <i class="fa-solid fa-pen-to-square text-emerald-600 text-base"></i>
+            <i class="fa-solid fa-pen-to-square text-emerald-600 text-base flex-shrink-0"></i>
             <span><strong>Mode Interactive Active:</strong> Klik/ketik langsung teks pada kolom yang ingin diubah, lalu tekan tombol <strong>Simpan</strong> di sebelah kanan baris tersebut!</span>
         </div>
 
-        <!-- NOTIFIKASI -->
+        <!-- NOTIFIKASI STATUS -->
         <div id="statusNotif" class="hidden mb-4 p-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300"></div>
 
         <!-- TABEL INTERAKTIF EDITABLE -->
@@ -52,16 +55,17 @@
                 <table class="w-full text-left border-collapse" id="timelineTable">
                     <thead>
                         <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
-                            <th class="p-3.5 rounded-l-lg">Tanggal</th>
+                            <th class="p-3.5 rounded-l-lg w-12 text-center">ID</th>
+                            <th class="p-3.5 w-32">Tanggal</th>
                             <th class="p-3.5">Nama Kegiatan</th>
-                            <th class="p-3.5">Penanggung Jawab (PIC)</th>
-                            <th class="p-3.5">Status</th>
-                            <th class="p-3.5 text-center rounded-r-lg">Aksi</th>
+                            <th class="p-3.5 w-48">Penanggung Jawab (PIC)</th>
+                            <th class="p-3.5 w-40">Status</th>
+                            <th class="p-3.5 text-center rounded-r-lg w-28">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
                         <tr>
-                            <td colspan="5" class="text-center p-8 text-slate-400">
+                            <td colspan="6" class="text-center p-8 text-slate-400">
                                 <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Memuat data timeline...
                             </td>
                         </tr>
@@ -72,32 +76,37 @@
     </div>
 
     <script>
-        // API SPREADSHEET KAMU
+        // API SheetDB Kamu untuk Sheet1
         const SHEETDB_API_URL = "https://sheetdb.io/api/v1/ty95tyd8xmmra";
+        let currentDataLength = 0;
 
-        // Auto load saat pertama buka
+        // Load data otomatis saat pertama kali dibuka
         window.onload = function() {
             fetchTasks();
         };
 
-        // 1. FUNGSI MENGAMBIL DATA
+        // 1. FUNGSI MENGAMBIL DATA DARI GOOGLE SHEETS
         function fetchTasks() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Mengambil data dari Google Sheets...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Mengambil data dari Google Sheets...</td></tr>`;
 
             fetch(SHEETDB_API_URL)
                 .then(response => response.json())
                 .then(data => {
                     tbody.innerHTML = '';
                     if (!data || data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-400">Belum ada data. Silakan isi di Google Sheets terlebih dahulu.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-400">Belum ada data di Sheet1. Klik 'Tambah Kegiatan' untuk mengisi.</td></tr>`;
+                        currentDataLength = 0;
                         return;
                     }
+
+                    currentDataLength = data.length;
 
                     data.forEach((item, index) => {
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
                         tr.innerHTML = `
+                            <td class="p-3.5 text-center font-mono text-slate-400 text-xs">${item.id || (index + 1)}</td>
                             <td class="p-3.5 font-semibold text-slate-600 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="tanggal-${index}">${item.tanggal || ''}</td>
                             <td class="p-3.5 font-bold text-slate-800 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="kegiatan-${index}">${item.nama_kegiatan || ''}</td>
                             <td class="p-3.5 text-slate-600 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="pic-${index}">${item.pic || ''}</td>
@@ -112,14 +121,14 @@
                     });
                 })
                 .catch(err => {
-                    showNotif("Gagal memuat data! Pastikan header di Google Sheets sudah sesuai (id, tanggal, nama_kegiatan, pic, status)", "error");
+                    showNotif("Gagal memuat data! Pastikan baris 1 di Sheet1 sesuai: id, tanggal, nama_kegiatan, pic, status", "error");
                 });
         }
 
-        // 2. FUNGSI MENYIMPAN PERUBAHAN
+        // 2. FUNGSI SIMPAN PERUBAHAN BARIS (PATCH)
         function saveRow(id, index) {
             if (!id) {
-                showNotif("Gagal simpan: Kolom 'id' di Google Sheets tidak boleh kosong!", "error");
+                showNotif("Gagal simpan: Kolom 'id' tidak ditemukan!", "error");
                 return;
             }
 
@@ -145,11 +154,42 @@
                 showNotif("Berhasil disimpan ke Google Sheets!", "success");
             })
             .catch(error => {
-                showNotif("Gagal menyimpan data. Coba lagi!", "error");
+                showNotif("Gagal menyimpan data. Silakan coba lagi!", "error");
             });
         }
 
-        // Helper Notifikasi
+        // 3. FUNGSI TAMBAH KEGIATAN BARU (POST)
+        function addNewRow() {
+            const nextId = currentDataLength + 1;
+            const newRowData = {
+                id: nextId,
+                tanggal: "Tgl Baru",
+                nama_kegiatan: "Nama Kegiatan Baru",
+                pic: "PIC",
+                status: "Belum Dikerjakan"
+            };
+
+            showNotif("Menambahkan baris baru...", "info");
+
+            fetch(SHEETDB_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data: [newRowData] })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotif("Baris baru berhasil ditambahkan!", "success");
+                fetchTasks(); // Reload tabel
+            })
+            .catch(error => {
+                showNotif("Gagal menambahkan baris baru!", "error");
+            });
+        }
+
+        // HELPER NOTIFIKASI
         function showNotif(msg, type) {
             const notif = document.getElementById('statusNotif');
             notif.innerText = msg;
