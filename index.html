@@ -196,7 +196,7 @@
             return `${startFormatted} – ${endFormatted}`;
         }
 
-        function renderTimeline() {
+function renderTimeline() {
     const tableBody = document.getElementById('ganttTableBody');
     const searchVal = document.getElementById('searchInput').value.toLowerCase();
     const picFilter = document.getElementById('picFilter').value;
@@ -219,10 +219,13 @@
     filteredTasks.forEach((task, idx) => {
         const config = categoryConfig[task.category] || categoryConfig.persiapan;
         
-        // Mengatasi Invalid Date jika rentang tanggal start/end kosong di sheet
+        // Gunakan tanggalText dari Spreadsheet jika fungsi JavaScript formatDateRange menghasilkan Invalid Date
         let formattedDate = task.tanggalText;
         if (task.start && task.end) {
-            formattedDate = formatDateRange(task.start, task.end);
+            const parsedRange = formatDateRange(task.start, task.end);
+            if (parsedRange && !parsedRange.includes("Invalid")) {
+                formattedDate = parsedRange;
+            }
         }
 
         const tr = document.createElement('tr');
