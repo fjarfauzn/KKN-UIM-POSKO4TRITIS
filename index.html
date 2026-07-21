@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline KKN Padukuhan Tritis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar to match nice aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Grid cell fixed sizes to align perfectly like Excel chart */
+        .gantt-col {
+            min-width: 32px;
+            max-width: 32px;
+            width: 32px;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- MAIN CONTAINER -->
+    <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- HEADER BOARD -->
+        <header class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl shadow-xl p-6 sm:p-8 mb-8 relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500 rounded-full opacity-10 blur-3xl"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-emerald-500 rounded-full opacity-10 blur-3xl"></div>
+            
+            <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <span class="bg-emerald-500/20 text-emerald-400 text-xs font-semibold tracking-wider uppercase px-3 py-1 rounded-full border border-emerald-500/30">
+                        <i class="fa-solid fa-calendar-days mr-1.5"></i> Kalender KKN Posko 4 
+                    </span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Timeline KKN dusun Tritis</h1>
+                    <p class="text-slate-300 text-sm sm:text-base mt-2 flex items-center gap-2">
+                        <span>Periode Kegiatan:</span>
+                        <span class="bg-slate-800 px-2.5 py-0.5 rounded text-amber-400 font-mono text-xs font-semibold">10 Agustus - 13 September 2026</span>
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2.5 no-print">
+                    <button onclick="openAddModal()" class="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 transition duration-150 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-plus mr-2"></i> Tambah Kegiatan
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 transition duration-150 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-slate-700">
+                        <i class="fa-solid fa-print mr-2"></i> Cetak / PDF
+                    </button>
+                    <button onclick="resetToDefault()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition duration-150 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-rose-500/20">
+                        <i class="fa-solid fa-rotate mr-2"></i> Reset Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- FILTER & CONTROLS SECTION -->
+        <section class="bg-white rounded-xl shadow-md border border-slate-100 p-5 mb-8 no-print">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-indigo-500"></i> Kontrol Panel & Filter Cepat
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search bar -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Cari Kegiatan</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Cari proker, tugas, atau PIC..." 
+                               class="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
+
+                <!-- Filter PIC -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Saring Berdasarkan PIC Utama</label>
+                    <select id="picFilter" onchange="applyFilters()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white">
+                        <option value="all">Semua Penanggung Jawab</option>
+                        <option value="Ketua">Ketua</option>
+                        <option value="Sekretaris">Sekretaris</option>
+                        <option value="Humas">Humas</option>
+                        <option value="Bendahara">Bendahara</option>
+                        <option value="Perkap">Perkap</option>
+                        <option value="PDD">PDD / Social Media</option>
+                        <option value="Seluruh">Seluruh Anggota</option>
+                    </select>
+                </div>
+
+                <!-- Filter Category -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Saring Berdasarkan Kategori</label>
+                    <select id="categoryFilter" onchange="applyFilters()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white">
+                        <option value="all">Semua Kategori</option>
+                        <option value="persiapan">Persiapan & Koordinasi</option>
+                        <option value="pelaksanaan">Pelaksanaan Program</option>
+                        <option value="publikasi">Publikasi & Dokumentasi</option>
+                        <option value="evaluasi">Evaluasi & Kegiatan Bersama</option>
+                        <option value="administrasi">Administrasi & Laporan</option>
+                        <option value="perlengkapan">Perlengkapan & Inventaris</option>
+                        <option value="penutupan">Penutupan & Perpisahan</option>
+                        <option value="kepulangan">Kepulangan</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Quick View Toggle for Mobile responsiveness -->
+            <div class="flex items-center justify-between border-t border-slate-100 mt-5 pt-4">
+                <span class="text-xs text-slate-500 italic flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-slate-400"></i> Tip: Klik baris mana saja pada tabel untuk mengedit atau menghapus kegiatan.
+                </span>
+                <div class="flex gap-2">
+                    <button onclick="toggleView('gantt')" id="ganttViewBtn" class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150">
+                        <i class="fa-solid fa-chart-gantt mr-1.5"></i> Bagan Gantt
+                    </button>
+                    <button onclick="toggleView('cards')" id="cardsViewBtn" class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150">
+                        <i class="fa-solid fa-list-ul mr-1.5"></i> Daftar Kartu
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 1: DYNAMIC GANTT CHART TABLE -->
+        <main id="ganttViewContainer" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mb-8 transition-opacity duration-300">
+            <div class="overflow-x-auto custom-scrollbar w-full">
+                <table class="w-full border-collapse text-left" id="ganttTable">
+                    <thead>
+                        <!-- Month Header Row -->
+                        <tr class="bg-indigo-950 text-slate-200 text-xs font-bold uppercase tracking-wider divide-x divide-indigo-900 border-b border-indigo-900">
+                            <th colspan="4" class="px-4 py-3 bg-indigo-950 sticky left-0 z-20 shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)] text-center">Informasi Kegiatan</th>
+                            <!-- August Column Spanning 22 Days (Aug 10 - Aug 31) -->
+                            <th colspan="22" class="px-2 py-3 text-center bg-indigo-950">Agustus 2026</th>
+                            <!-- September Column Spanning 13 Days (Sept 1 - Sept 13) -->
+                            <th colspan="13" class="px-2 py-3 text-center bg-indigo-900/40">September 2026</th>
+                        </tr>
+                        <!-- Day Grid Headers -->
+                        <tr class="bg-slate-900 text-slate-300 font-mono text-center text-xs divide-x divide-slate-800 border-b border-slate-800">
+                            <!-- Sticky left columns -->
+                            <th class="px-3 py-2 bg-slate-900 sticky left-0 z-20 text-center w-12 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">No</th>
+                            <th class="px-4 py-2 bg-slate-900 sticky left-[48px] z-20 text-left min-w-[140px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Tanggal</th>
+                            <th class="px-5 py-2 bg-slate-900 sticky left-[188px] z-20 text-left min-w-[280px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Nama Kegiatan</th>
+                            <th class="px-4 py-2 bg-slate-900 sticky left-[468px] z-20 text-left min-w-[150px] shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)]">Penanggung Jawab</th>
+                            <!-- Days of Aug (10 to 31) -->
+                            <!-- Javascript will inject August header columns here dynamically -->
+                            <!-- Days of Sep (1 to 13) -->
+                            <!-- Javascript will inject September header columns here dynamically -->
+                        </tr>
+                    </thead>
+                    <tbody id="ganttTableBody" class="divide-y divide-slate-100 text-sm font-medium">
+                        <!-- Dynamic items will be appended via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty state fallback -->
+            <div id="emptyState" class="hidden flex flex-col items-center justify-center p-16 text-center text-slate-400">
+                <i class="fa-regular fa-folder-open text-5xl mb-3 text-slate-300"></i>
+                <p class="font-medium text-slate-500">Tidak ada kegiatan yang sesuai dengan pencarian Anda.</p>
+                <button onclick="clearAllFilters()" class="mt-4 px-4 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition">Atur Ulang Filter</button>
+            </div>
+        </main>
+
+        <!-- VIEW 2: RESPONSIVE CARDS VIEW (Perfect for smaller/mobile screens) -->
+        <main id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Dynamically populated card blocks -->
+        </main>
+
+        <!-- COLOR LEGENDS -->
+        <section class="bg-white rounded-xl shadow-md border border-slate-100 p-5 mb-12">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-palette text-indigo-500"></i> Keterangan Warna Kegiatan
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3.5 text-center">
+                <div class="flex flex-col items-center p-2 rounded-lg bg-indigo-50/50 border border-indigo-100">
+                    <span class="w-8 h-4 rounded bg-indigo-600 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Persiapan & Koordinasi</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-green-50/50 border border-green-100">
+                    <span class="w-8 h-4 rounded bg-green-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Pelaksanaan Program</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-purple-50/50 border border-purple-100">
+                    <span class="w-8 h-4 rounded bg-purple-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Publikasi & Dokumentasi</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-amber-50/50 border border-amber-100">
+                    <span class="w-8 h-4 rounded bg-amber-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Evaluasi & Rapat Bersama</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-cyan-50/50 border border-cyan-100">
+                    <span class="w-8 h-4 rounded bg-cyan-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Administrasi & Laporan</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-orange-50/50 border border-orange-100">
+                    <span class="w-8 h-4 rounded bg-orange-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Perlengkapan & Logistik</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-rose-50/50 border border-rose-100">
+                    <span class="w-8 h-4 rounded bg-rose-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Penutupan & Perpisahan</span>
+                </div>
+                <div class="flex flex-col items-center p-2 rounded-lg bg-slate-100 border border-slate-200">
+                    <span class="w-8 h-4 rounded bg-slate-500 shadow-sm mb-2"></span>
+                    <span class="text-xs text-slate-600 font-medium leading-tight">Kepulangan Tim</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- DYNAMIC POPUP MODAL (Add / Edit Kegiatan) -->
+    <div id="taskModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
+                <h2 id="modalTitle" class="text-lg font-bold">Tambah Kegiatan KKN</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Form Body -->
+            <form id="taskForm" onsubmit="saveTask(event)" class="p-6 space-y-4">
+                <input type="hidden" id="taskId">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kegiatan / Program Kerja</label>
+                    <textarea id="taskText" required rows="3" placeholder="Contoh: Silaturahmi dengan perangkat desa dan tokoh masyarakat..." 
+                              class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Mulai Tanggal</label>
+                        <input type="date" id="taskStart" required min="2026-08-10" max="2026-09-13"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Hingga Tanggal</label>
+                        <input type="date" id="taskEnd" required min="2026-08-10" max="2026-09-13"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Penanggung Jawab (PIC)</label>
+                        <input type="text" id="taskPic" required placeholder="Contoh: Ketua, Humas, Seluruh anggota"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori Warna</label>
+                        <select id="taskCategory" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="persiapan">Persiapan & Koordinasi</option>
+                            <option value="pelaksanaan">Pelaksanaan Program</option>
+                            <option value="publikasi">Publikasi & Dokumentasi</option>
+                            <option value="evaluasi">Evaluasi & Rapat Bersama</option>
+                            <option value="administrasi">Administrasi & Laporan</option>
+                            <option value="perlengkapan">Perlengkapan & Logistik</option>
+                            <option value="penutupan">Penutupan & Perpisahan</option>
+                            <option value="kepulangan">Kepulangan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-6">
+                    <button type="button" id="deleteTaskBtn" onclick="deleteTask()" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                        <i class="fa-solid fa-trash mr-1.5"></i> Hapus Kegiatan
+                    </button>
+                    <div class="flex gap-2 ml-auto">
+                        <button type="button" onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/15 transition">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-800 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50">
+        <span class="flex h-2.5 w-2.5 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span id="toastMessage" class="text-xs font-semibold">Tugas berhasil diperbarui!</span>
+    </div>
+
+    <script>
+        // Default KKN Dataset based on user's prompt
+        const defaultKKNTasks = [
+            { id: 1, text: "Kedatangan di lokasi KKN, pembagian tempat tinggal, koordinasi internal", start: "2026-08-10", end: "2026-08-10", pic: "Ketua, Sekretaris", category: "persiapan" },
+            { id: 2, text: "Silaturahmi dengan perangkat desa dan tokoh masyarakat", start: "2026-08-11", end: "2026-08-11", pic: "Ketua, Humas", category: "persiapan" },
+            { id: 3, text: "Survei lingkungan, observasi potensi dan permasalahan desa", start: "2026-08-12", end: "2026-08-12", pic: "Seluruh anggota", category: "persiapan" },
+            { id: 4, text: "Penyusunan dan finalisasi program kerja", start: "2026-08-13", end: "2026-08-13", pic: "Ketua, Sekretaris, Seluruh anggota", category: "persiapan" },
+            { id: 5, text: "Persiapan administrasi, surat-menyurat, kebutuhan perlengkapan", start: "2026-08-14", end: "2026-08-14", pic: "Sekretaris, Perkap", category: "administrasi" },
+            { id: 6, text: "Publikasi kedatangan dan perkenalan tim KKN di media sosial", start: "2026-08-15", end: "2026-08-15", pic: "PDD/Social Media", category: "publikasi" },
+            { id: 7, text: "Pelaksanaan Program Kerja Minggu I", start: "2026-08-16", end: "2026-08-22", pic: "Ketua (koordinator), seluruh anggota", category: "pelaksanaan" },
+            { id: 8, text: "Dokumentasi kegiatan harian dan publikasi media sosial", start: "2026-08-16", end: "2026-08-22", pic: "PDD/Social Media", category: "publikasi" },
+            { id: 9, text: "Koordinasi dengan mitra, perangkat desa, dan masyarakat", start: "2026-08-16", end: "2026-08-22", pic: "Humas", category: "persiapan" },
+            { id: 10, text: "Pengelolaan anggaran kegiatan KKN", start: "2026-08-16", end: "2026-08-22", pic: "Bendahara", category: "administrasi" },
+            { id: 11, text: "Penyediaan alat dan logistik kegiatan", start: "2026-08-16", end: "2026-08-22", pic: "Perkap", category: "perlengkapan" },
+            { id: 12, text: "Evaluasi Minggu I dan penyusunan laporan perkembangan", start: "2026-08-23", end: "2026-08-23", pic: "Ketua, Sekretaris", category: "evaluasi" },
+            { id: 13, text: "Pelaksanaan Program Kerja Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Seluruh anggota", category: "pelaksanaan" },
+            { id: 14, text: "Dokumentasi dan publikasi kegiatan Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "PDD/Social Media", category: "publikasi" },
+            { id: 15, text: "Koordinasi peserta dan stakeholder program II", start: "2026-08-24", end: "2026-08-30", pic: "Humas", category: "persiapan" },
+            { id: 16, text: "Monitoring penggunaan dana Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Bendahara", category: "administrasi" },
+            { id: 17, text: "Pengadaan perlengkapan tambahan Minggu II", start: "2026-08-24", end: "2026-08-30", pic: "Perkap", category: "perlengkapan" },
+            { id: 18, text: "Evaluasi Minggu II, revisi jadwal bila diperlukan", start: "2026-08-31", end: "2026-08-31", pic: "Ketua, Seluruh anggota", category: "evaluasi" },
+            { id: 19, text: "Pelaksanaan Program Kerja Minggu III dan penyelesaian program utama", start: "2026-09-01", end: "2026-09-07", pic: "Seluruh anggota", category: "pelaksanaan" },
+            { id: 20, text: "Pembuatan dokumentasi akhir (foto, video, konten)", start: "2026-09-01", end: "2026-09-07", pic: "PDD/Social Media", category: "publikasi" },
+            { id: 21, text: "Penyusunan laporan administrasi dan keuangan", start: "2026-09-01", end: "2026-09-07", pic: "Sekretaris, Bendahara", category: "administrasi" },
+            { id: 22, text: "Penyelesaian program lanjutan, serah hasil kegiatan kepada desa", start: "2026-09-08", end: "2026-09-10", pic: "Ketua, Humas", category: "penutupan" },
+            { id: 23, text: "Penyusunan laporan akhir kelompok dan inventarisasi perlengkapan", start: "2026-09-11", end: "2026-09-11", pic: "Ketua, Sekretaris, Perkap", category: "administrasi" },
+            { id: 24, text: "Perpisahan dengan masyarakat dan penutupan kegiatan desa", start: "2026-09-12", end: "2026-09-12", pic: "Seluruh anggota", category: "penutupan" },
+            { id: 25, text: "Kepulangan dan evaluasi akhir kelompok", start: "2026-09-13", end: "2026-09-13", pic: "Seluruh anggota", category: "kepulangan" }
+        ];
+
+        // State Store
+        let tasks = [];
+        let currentView = 'gantt'; // 'gantt' or 'cards'
+
+        // Category configurations mapping back to styling
+        const categoryConfig = {
+            persiapan: { bg: 'bg-indigo-600', hover: 'hover:bg-indigo-700', text: 'text-indigo-600', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+            pelaksanaan: { bg: 'bg-green-500', hover: 'hover:bg-green-600', text: 'text-green-600', badge: 'bg-green-50 border-green-200 text-green-700' },
+            publikasi: { bg: 'bg-purple-500', hover: 'hover:bg-purple-600', text: 'text-purple-600', badge: 'bg-purple-50 border-purple-200 text-purple-700' },
+            evaluasi: { bg: 'bg-amber-500', hover: 'hover:bg-amber-600', text: 'text-amber-600', badge: 'bg-amber-50 border-amber-200 text-amber-700' },
+            administrasi: { bg: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-600', badge: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+            perlengkapan: { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', text: 'text-orange-600', badge: 'bg-orange-50 border-orange-200 text-orange-700' },
+            penutupan: { bg: 'bg-rose-500', hover: 'hover:bg-rose-600', text: 'text-rose-600', badge: 'bg-rose-50 border-rose-200 text-rose-700' },
+            kepulangan: { bg: 'bg-slate-500', hover: 'hover:bg-slate-600', text: 'text-slate-600', badge: 'bg-slate-50 border-slate-200 text-slate-700' }
+        };
+
+        // Timeline Date Ranges (Aug 10 - Sep 13, 2026)
+        const totalDates = [];
+
+        // Generate Dates range programmatically
+        function generateCalendarDates() {
+            // August 10 - 31
+            for (let d = 10; d <= 31; d++) {
+                totalDates.push({
+                    day: d,
+                    monthName: 'Agust',
+                    dateString: `2026-08-${d.toString().padStart(2, '0')}`,
+                    fullText: `${d} Agst 2026`
+                });
+            }
+            // September 1 - 13
+            for (let d = 1; d <= 13; d++) {
+                totalDates.push({
+                    day: d,
+                    monthName: 'Sept',
+                    dateString: `2026-09-${d.toString().padStart(2, '0')}`,
+                    fullText: `${d} Sept 2026`
+                });
+            }
+        }
+
+        // Initialize state, load localStorage if available
+        window.onload = function() {
+            generateCalendarDates();
+            loadHeaderDays();
+            
+            const savedTasks = localStorage.getItem('kkn_tasks_storage');
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            } else {
+                tasks = [...defaultKKNTasks];
+            }
+            
+            renderTimeline();
+        }
+
+        // Insert table header cells
+        function loadHeaderDays() {
+            const headerRow = document.querySelector('#ganttTable tr.divide-x.border-b.text-center');
+            
+            totalDates.forEach(date => {
+                const th = document.createElement('th');
+                th.className = 'gantt-col py-2 font-mono text-[10px] font-semibold text-center hover:bg-slate-800 transition-colors cursor-help';
+                th.innerText = date.day;
+                th.title = date.fullText;
+                headerRow.appendChild(th);
+            });
+        }
+
+        // Helper: Check if task spans across a checked date string
+        function isDateInSpan(checkedDate, startDate, endDate) {
+            const chk = new Date(checkedDate);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            return chk >= start && chk <= end;
+        }
+
+        // Format Date string helper (ex: "2026-08-16" -> "16 Agst")
+        function formatDateRange(startStr, endStr) {
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            
+            const options = { day: 'numeric', month: 'short' };
+            const startFormatted = start.toLocaleDateString('id-ID', options);
+            const endFormatted = end.toLocaleDateString('id-ID', options);
+            
+            if (startStr === endStr) {
+                return startFormatted;
+            }
+            
+            // Extract month to see if they're the same
+            if (start.getMonth() === end.getMonth()) {
+                return `${start.getDate()}–${endFormatted}`;
+            }
+            return `${startFormatted} – ${endFormatted}`;
+        }
+
+        // Main Render Loop
+        function renderTimeline() {
+            const tableBody = document.getElementById('ganttTableBody');
+            const cardsContainer = document.getElementById('cardsViewContainer');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const picFilter = document.getElementById('picFilter').value;
+            const catFilter = document.getElementById('categoryFilter').value;
+            
+            tableBody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            // Filter logic
+            const filteredTasks = tasks.filter(task => {
+                const matchesSearch = task.text.toLowerCase().includes(searchVal) || 
+                                      task.pic.toLowerCase().includes(searchVal) || 
+                                      formatDateRange(task.start, task.end).toLowerCase().includes(searchVal);
+                
+                const matchesPic = picFilter === 'all' || 
+                                   task.pic.toLowerCase().includes(picFilter.toLowerCase());
+                
+                const matchesCat = catFilter === 'all' || task.category === catFilter;
+
+                return matchesSearch && matchesPic && matchesCat;
+            });
+
+            // Handle empty state
+            if (filteredTasks.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('ganttTable').classList.add('opacity-50');
+            } else {
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('ganttTable').classList.remove('opacity-50');
+            }
+
+            // Populate Table & Cards
+            filteredTasks.forEach((task, idx) => {
+                const config = categoryConfig[task.category] || categoryConfig.persiapan;
+                const formattedDate = formatDateRange(task.start, task.end);
+
+                /* --- RENDER GANNT TABLE ROW --- */
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition duration-150 cursor-pointer';
+                tr.onclick = () => openEditModal(task.id);
+
+                // No
+                const tdNo = document.createElement('td');
+                tdNo.className = 'px-3 py-3 text-center text-slate-400 font-mono text-xs bg-white sticky left-0 z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]';
+                tdNo.innerText = idx + 1;
+                tr.appendChild(tdNo);
+
+                // Tanggal
+                const tdDate = document.createElement('td');
+                tdDate.className = 'px-4 py-3 text-slate-600 text-xs font-semibold bg-white sticky left-[48px] z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]';
+                tdDate.innerText = formattedDate;
+                tr.appendChild(tdDate);
+
+                // Kegiatan Name
+                const tdName = document.createElement('td');
+                tdName.className = 'px-5 py-3 text-slate-800 text-xs font-semibold max-w-[320px] bg-white sticky left-[188px] z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)] truncate hover:whitespace-normal';
+                tdName.innerText = task.text;
+                tr.appendChild(tdName);
+
+                // PIC
+                const tdPic = document.createElement('td');
+                tdPic.className = 'px-4 py-3 bg-white sticky left-[468px] z-10 border-r border-slate-100 shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)]';
+                tdPic.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 border border-slate-200 text-slate-700">${task.pic}</span>`;
+                tr.appendChild(tdPic);
+
+                // Date Columns / Blocks
+                totalDates.forEach(dateObj => {
+                    const tdCell = document.createElement('td');
+                    tdCell.className = 'gantt-col border-r border-slate-100/70 p-1 text-center align-middle relative h-full';
+                    
+                    const matchesDate = isDateInSpan(dateObj.dateString, task.start, task.end);
+                    if (matchesDate) {
+                        const blockDiv = document.createElement('div');
+                        blockDiv.className = `${config.bg} ${config.hover} h-6 rounded-md shadow-sm transition-all duration-150 cursor-pointer flex items-center justify-center text-[8px] text-white font-bold`;
+                        blockDiv.title = `${task.text}\n(${formattedDate})\n[${task.pic}]`;
+                        tdCell.appendChild(blockDiv);
+                    }
+                    
+                    tr.appendChild(tdCell);
+                });
+
+                tableBody.appendChild(tr);
+
+                /* --- RENDER RESPONSIVE CARD VIEW --- */
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl border border-slate-150 p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-150 flex flex-col justify-between cursor-pointer';
+                card.onclick = () => openEditModal(task.id);
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${config.badge}">
+                                ${task.category.toUpperCase()}
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-slate-400"></i> ${formattedDate}
+                            </span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 leading-snug mb-2">${task.text}</h4>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">PIC:</span>
+                        <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">${task.pic}</span>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Filtering controllers
+        function applyFilters() {
+            renderTimeline();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('picFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            renderTimeline();
+        }
+
+        // Toggle View Mode (Bagan Gantt VS Daftar Kartu)
+        function toggleView(viewType) {
+            currentView = viewType;
+            const ganttBtn = document.getElementById('ganttViewBtn');
+            const cardsBtn = document.getElementById('cardsViewBtn');
+            const ganttCont = document.getElementById('ganttViewContainer');
+            const cardsCont = document.getElementById('cardsViewContainer');
+
+            if (viewType === 'gantt') {
+                ganttBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150';
+                cardsBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150';
+                ganttCont.classList.remove('hidden');
+                cardsCont.classList.add('hidden');
+            } else {
+                cardsBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150';
+                ganttBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150';
+                cardsCont.classList.remove('hidden');
+                ganttCont.classList.add('hidden');
+            }
+        }
+
+        // Open/Close Modals
+        function openAddModal() {
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+            document.getElementById('modalTitle').innerText = 'Tambah Kegiatan KKN';
+            
+            // Set default dates
+            document.getElementById('taskStart').value = '2026-08-10';
+            document.getElementById('taskEnd').value = '2026-08-10';
+            document.getElementById('deleteTaskBtn').classList.add('hidden');
+            
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskText').value = task.text;
+            document.getElementById('taskStart').value = task.start;
+            document.getElementById('taskEnd').value = task.end;
+            document.getElementById('taskPic').value = task.pic;
+            document.getElementById('taskCategory').value = task.category;
+            
+            document.getElementById('modalTitle').innerText = 'Edit Kegiatan KKN';
+            document.getElementById('deleteTaskBtn').classList.remove('hidden');
+            
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        // Save, Edit, and Persistence handler
+        function saveTask(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('taskId').value;
+            const text = document.getElementById('taskText').value;
+            const start = document.getElementById('taskStart').value;
+            const end = document.getElementById('taskEnd').value;
+            const pic = document.getElementById('taskPic').value;
+            const category = document.getElementById('taskCategory').value;
+
+            // Date validation rules
+            if (new Date(start) > new Date(end)) {
+                showToast("Tanggal akhir tidak boleh lebih dulu dari tanggal mulai!", "error");
+                return;
+            }
+
+            if (id) {
+                // Update existing
+                const index = tasks.findIndex(t => t.id == id);
+                if (index !== -1) {
+                    tasks[index] = { id: parseInt(id), text, start, end, pic, category };
+                    showToast("Kegiatan KKN berhasil diperbarui!");
+                }
+            } else {
+                // Insert new
+                const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+                tasks.push({ id: newId, text, start, end, pic, category });
+                showToast("Kegiatan KKN berhasil ditambahkan!");
+            }
+
+            saveData();
+            closeModal();
+            renderTimeline();
+        }
+
+        function deleteTask() {
+            const id = document.getElementById('taskId').value;
+            if (!id) return;
+
+            tasks = tasks.filter(t => t.id != id);
+            showToast("Kegiatan berhasil dihapus!");
+            
+            saveData();
+            closeModal();
+            renderTimeline();
+        }
+
+        // RESET SYSTEM TO DEFAULTS
+        function resetToDefault() {
+            if (confirm("Apakah Anda yakin ingin menyetel ulang data timeline ke pengaturan bawaan awal? Semua perubahan kustom Anda akan terhapus.")) {
+                tasks = [...defaultKKNTasks];
+                saveData();
+                renderTimeline();
+                showToast("Data disetel ulang ke default kelompok.");
+            }
+        }
+
+        // Local Storage Sync
+        function saveData() {
+            localStorage.setItem('kkn_tasks_storage', JSON.stringify(tasks));
+        }
+
+        // Dynamic Native Toast Notifications
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.innerText = message;
+            
+            // Adjust visual indicators
+            if (type === "success") {
+                toast.classList.replace('border-rose-500', 'border-slate-800');
+            } else {
+                toast.classList.add('border-rose-500');
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
