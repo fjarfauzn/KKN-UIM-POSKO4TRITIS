@@ -50,29 +50,36 @@
                     <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 transition duration-150 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-slate-700">
                         <i class="fa-solid fa-print mr-2"></i> Cetak / PDF
                     </button>
-                    <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vScsiJIurJQp2E89yzlzqvZNrLYkCat4g1mfLeYaHCMv75m0YCzjsEI5VfJJ61l0R2bIaO9k6Ef44d5/pubhtml" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 transition duration-150 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center shadow-lg shadow-emerald-500/20">
-                        <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> Buka Google Sheets
+                    <!-- TOMBOL UTAMA EDIT SPREADSHEET -->
+                    <a href="https://docs.google.com/spreadsheets/d/1ScsiJIurJQp2E89yzlzqvZNrLYkCat4g1mfLeYaHCMv75m0YCzjsEI5VfJJ61l0R2bIaO9k6Ef44d5/edit" 
+                       target="_blank" 
+                       class="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 transition duration-150 text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i> Edit Jadwal
                     </a>
                 </div>
             </div>
         </header>
 
-        <!-- INFO BAR -->
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 text-indigo-900 text-xs sm:text-sm flex items-center justify-between no-print">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square text-indigo-600 text-base"></i>
-                <span><strong>Tabel Interaktif:</strong> Anda dan teman-teman dapat langsung mengedit jadwal melalui sheet di bawah ini. Perubahan akan tersimpan otomatis[cite: 1].</span>
+        <!-- INFO BAR CARA EDIT -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-circle-info text-amber-600 text-lg"></i>
+                <span><strong>Ingin Mengubah Data?</strong> Klik tombol hijau di sebelah kanan untuk membuka Google Sheets. Perubahan Anda akan otomatis tersimpan dan ter-update di web ini secara terintegrasi.</span>
             </div>
+            <a href="https://docs.google.com/spreadsheets/d/1ScsiJIurJQp2E89yzlzqvZNrLYkCat4g1mfLeYaHCMv75m0YCzjsEI5VfJJ61l0R2bIaO9k6Ef44d5/edit" 
+               target="_blank" 
+               class="whitespace-nowrap font-semibold text-xs bg-amber-200/60 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded-md transition text-center border border-amber-300">
+                Buka Editor <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+            </a>
         </div>
 
-        <!-- GOOGLE SHEETS IFRAME CONTAINER -->
- <!-- GOOGLE SHEETS IFRAME CONTAINER -->
-<main class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8 w-full" style="height: 80vh; min-height: 600px;">
-    <iframe 
-        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vScsiJIurJQp2E89yzlzqvZNrLYkCat4g1mfLeYaHCMv75m0YCzjsEI5VfJJ61l0R2bIaO9k6Ef44d5/pubhtml?gid=1082546951&amp;single=true&amp;widget=true&amp;headers=false"
-        style="width: 100%; height: 100%; border: none;">
-    </iframe>
-</main>
+        <!-- GOOGLE SHEETS IFRAME CONTAINER (CLEAN & RESPONSIVE) -->
+        <main class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8 w-full flex-grow relative" style="height: 75vh; min-height: 600px;">
+            <iframe 
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vScsiJIurJQp2E89yzlzqvZNrLYkCat4g1mfLeYaHCMv75m0YCzjsEI5VfJJ61l0R2bIaO9k6Ef44d5/pubhtml?widget=true&amp;headers=false"
+                style="width: 100%; height: 100%; border: none;">
+            </iframe>
+        </main>
 
     </div>
 
