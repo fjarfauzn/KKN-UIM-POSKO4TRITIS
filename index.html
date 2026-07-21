@@ -197,58 +197,63 @@
         }
 
         function renderTimeline() {
-            const tableBody = document.getElementById('ganttTableBody');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const picFilter = document.getElementById('picFilter').value;
-            const catFilter = document.getElementById('categoryFilter').value;
-            
-            tableBody.innerHTML = '';
+    const tableBody = document.getElementById('ganttTableBody');
+    const searchVal = document.getElementById('searchInput').value.toLowerCase();
+    const picFilter = document.getElementById('picFilter').value;
+    const catFilter = document.getElementById('categoryFilter').value;
+    
+    tableBody.innerHTML = '';
 
-            const filteredTasks = tasks.filter(task => {
-                const text = task.text || '';
-                const pic = task.pic || '';
-                const category = task.category || '';
+    const filteredTasks = tasks.filter(task => {
+        const text = task.text || '';
+        const pic = task.pic || '';
+        const category = task.category || '';
 
-                const matchesSearch = text.toLowerCase().includes(searchVal) || pic.toLowerCase().includes(searchVal);
-                const matchesPic = picFilter === 'all' || pic.toLowerCase().includes(picFilter.toLowerCase());
-                const matchesCat = catFilter === 'all' || category === catFilter;
+        const matchesSearch = text.toLowerCase().includes(searchVal) || pic.toLowerCase().includes(searchVal);
+        const matchesPic = picFilter === 'all' || pic.toLowerCase().includes(picFilter.toLowerCase());
+        const matchesCat = catFilter === 'all' || category === catFilter;
 
-                return matchesSearch && matchesPic && matchesCat;
-            });
+        return matchesSearch && matchesPic && matchesCat;
+    });
 
-            filteredTasks.forEach((task, idx) => {
-                const config = categoryConfig[task.category] || categoryConfig.persiapan;
-                const formattedDate = formatDateRange(task.start, task.end);
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition duration-150';
-
-                tr.innerHTML = `
-                    <td class="px-3 py-3 text-center text-slate-400 font-mono text-xs bg-white sticky left-0 z-10 border-r border-slate-100">${idx + 1}</td>
-                    <td class="px-4 py-3 text-slate-600 text-xs font-semibold bg-white sticky left-[48px] z-10 border-r border-slate-100">${formattedDate}</td>
-                    <td class="px-5 py-3 text-slate-800 text-xs font-semibold max-w-[320px] bg-white sticky left-[188px] z-10 border-r border-slate-100 truncate">${task.text}</td>
-                    <td class="px-4 py-3 bg-white sticky left-[468px] z-10 border-r border-slate-100">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 border border-slate-200 text-slate-700">${task.pic}</span>
-                    </td>
-                `;
-
-                totalDates.forEach(dateObj => {
-                    const tdCell = document.createElement('td');
-                    tdCell.className = 'gantt-col border-r border-slate-100/70 p-1 text-center align-middle relative h-full';
-                    
-                    if (isDateInSpan(dateObj.dateString, task.start, task.end)) {
-                        const blockDiv = document.createElement('div');
-                        blockDiv.className = `${config.bg} ${config.hover} h-6 rounded-md shadow-sm transition-all duration-150 flex items-center justify-center text-[8px] text-white font-bold`;
-                        blockDiv.title = `${task.text}\n(${formattedDate})\n[${task.pic}]`;
-                        tdCell.appendChild(blockDiv);
-                    }
-                    
-                    tr.appendChild(tdCell);
-                });
-
-                tableBody.appendChild(tr);
-            });
+    filteredTasks.forEach((task, idx) => {
+        const config = categoryConfig[task.category] || categoryConfig.persiapan;
+        
+        // Mengatasi Invalid Date jika rentang tanggal start/end kosong di sheet
+        let formattedDate = task.tanggalText;
+        if (task.start && task.end) {
+            formattedDate = formatDateRange(task.start, task.end);
         }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition duration-150';
+
+        tr.innerHTML = `
+            <td class="px-3 py-3 text-center text-slate-400 font-mono text-xs bg-white sticky left-0 z-10 border-r border-slate-100">${task.no || (idx + 1)}</td>
+            <td class="px-4 py-3 text-slate-600 text-xs font-semibold bg-white sticky left-[48px] z-10 border-r border-slate-100">${formattedDate}</td>
+            <td class="px-5 py-3 text-slate-800 text-xs font-semibold max-w-[320px] bg-white sticky left-[188px] z-10 border-r border-slate-100">${task.text}</td>
+            <td class="px-4 py-3 bg-white sticky left-[468px] z-10 border-r border-slate-100">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 border border-slate-200 text-slate-700">${task.pic}</span>
+            </td>
+        `;
+
+        totalDates.forEach(dateObj => {
+            const tdCell = document.createElement('td');
+            tdCell.className = 'gantt-col border-r border-slate-100/70 p-1 text-center align-middle relative h-full';
+            
+            if (task.start && task.end && isDateInSpan(dateObj.dateString, task.start, task.end)) {
+                const blockDiv = document.createElement('div');
+                blockDiv.className = `${config.bg} ${config.hover} h-6 rounded-md shadow-sm transition-all duration-150 flex items-center justify-center text-[8px] text-white font-bold`;
+                blockDiv.title = `${task.text}\n(${formattedDate})\n[${task.pic}]`;
+                tdCell.appendChild(blockDiv);
+            }
+            
+            tr.appendChild(tdCell);
+        });
+
+        tableBody.appendChild(tr);
+    });
+}
 
         function applyFilters() { renderTimeline(); }
     </script>
