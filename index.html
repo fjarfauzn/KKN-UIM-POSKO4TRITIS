@@ -12,6 +12,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .gantt-col { min-width: 32px; max-width: 32px; width: 32px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -20,156 +29,570 @@
     <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         
         <!-- HEADER BOARD -->
-        <header class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl shadow-xl p-6 sm:p-8 mb-6 relative overflow-hidden">
+        <header class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl shadow-xl p-6 sm:p-8 mb-8 relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500 rounded-full opacity-10 blur-3xl"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-emerald-500 rounded-full opacity-10 blur-3xl"></div>
+            
             <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <span class="bg-emerald-500/20 text-emerald-400 text-xs font-semibold tracking-wider uppercase px-3 py-1 rounded-full border border-emerald-500/30">
                         <i class="fa-solid fa-calendar-days mr-1.5"></i> Kalender KKN Posko 4 
                     </span>
                     <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Timeline KKN dusun Tritis</h1>
-                    <p class="text-slate-300 text-sm sm:text-base mt-2">Periode Kegiatan: 10 Agustus - 13 September 2026</p>
+                    <p class="text-slate-300 text-sm sm:text-base mt-2 flex items-center gap-2">
+                        <span>Periode Kegiatan:</span>
+                        <span class="bg-slate-800 px-2.5 py-0.5 rounded text-amber-400 font-mono text-xs font-semibold">10 Agustus - 13 September 2026</span>
+                    </p>
                 </div>
-                <div class="flex flex-wrap gap-2.5">
+                <div class="flex flex-wrap gap-2.5 no-print">
                     <button onclick="fetchTasks()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center transition shadow-lg">
                         <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
                     </button>
-                    <button onclick="addNewRow()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center transition shadow-lg">
+                    <button onclick="openAddModal()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center transition shadow-lg shadow-emerald-500/20">
                         <i class="fa-solid fa-plus mr-2"></i> Tambah Kegiatan
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center border border-slate-700">
+                        <i class="fa-solid fa-print mr-2"></i> Cetak / PDF
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- INFO BAR -->
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 text-emerald-900 text-xs sm:text-sm flex items-center gap-2.5">
-            <i class="fa-solid fa-pen-to-square text-emerald-600 text-base flex-shrink-0"></i>
-            <span><strong>Mode Interactive Active:</strong> Klik/ketik langsung teks pada kolom yang ingin diubah, lalu tekan tombol <strong>Simpan</strong> di sebelah kanan baris tersebut!</span>
-        </div>
+        <!-- FILTER & CONTROLS SECTION -->
+        <section class="bg-white rounded-xl shadow-md border border-slate-100 p-5 mb-8 no-print">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-indigo-500"></i> Kontrol Panel & Filter Cepat
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Search bar -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Cari Kegiatan</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input id="searchInput" type="text" oninput="applyFilters()" placeholder="Cari proker, tugas, atau PIC..." 
+                               class="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
 
-        <!-- NOTIFIKASI STATUS -->
-        <div id="statusNotif" class="hidden mb-4 p-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300"></div>
+                <!-- Filter PIC -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Saring Berdasarkan PIC Utama</label>
+                    <select id="picFilter" onchange="applyFilters()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white">
+                        <option value="all">Semua Penanggung Jawab</option>
+                        <option value="Ketua">Ketua</option>
+                        <option value="Sekretaris">Sekretaris</option>
+                        <option value="Humas">Humas</option>
+                        <option value="Bendahara">Bendahara</option>
+                        <option value="Perkap">Perkap</option>
+                        <option value="PDD">PDD / Social Media</option>
+                        <option value="Seluruh">Seluruh Anggota</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Quick View Toggle -->
+            <div class="flex items-center justify-between border-t border-slate-100 mt-5 pt-4">
+                <span class="text-xs text-slate-500 italic flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-slate-400"></i> Klik baris mana saja pada tabel untuk mengedit atau menghapus kegiatan online.
+                </span>
+                <div class="flex gap-2">
+                    <button onclick="toggleView('gantt')" id="ganttViewBtn" class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150">
+                        <i class="fa-solid fa-chart-gantt mr-1.5"></i> Bagan Gantt
+                    </button>
+                    <button onclick="toggleView('cards')" id="cardsViewBtn" class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150">
+                        <i class="fa-solid fa-list-ul mr-1.5"></i> Daftar Kartu
+                    </button>
+                </div>
+            </div>
+        </section>
 
-        <!-- TABEL INTERAKTIF EDITABLE -->
-        <main class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8 p-2 sm:p-4">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="timelineTable">
+        <!-- VIEW 1: DYNAMIC GANTT CHART TABLE -->
+        <main id="ganttViewContainer" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mb-8 transition-opacity duration-300">
+            <div class="overflow-x-auto custom-scrollbar w-full">
+                <table class="w-full border-collapse text-left" id="ganttTable">
                     <thead>
-                        <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
-                            <th class="p-3.5 rounded-l-lg w-12 text-center">ID</th>
-                            <th class="p-3.5 w-32">Tanggal</th>
-                            <th class="p-3.5">Nama Kegiatan</th>
-                            <th class="p-3.5 w-48">Penanggung Jawab (PIC)</th>
-                            <th class="p-3.5 w-40">Status</th>
-                            <th class="p-3.5 text-center rounded-r-lg w-28">Aksi</th>
+                        <!-- Month Header Row -->
+                        <tr class="bg-indigo-950 text-slate-200 text-xs font-bold uppercase tracking-wider divide-x divide-indigo-900 border-b border-indigo-900">
+                            <th colspan="5" class="px-4 py-3 bg-indigo-950 sticky left-0 z-20 shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)] text-center">Informasi Kegiatan KKN</th>
+                            <!-- August Column Spanning 22 Days (Aug 10 - Aug 31) -->
+                            <th colspan="22" class="px-2 py-3 text-center bg-indigo-950">Agustus 2026</th>
+                            <!-- September Column Spanning 13 Days (Sept 1 - Sept 13) -->
+                            <th colspan="13" class="px-2 py-3 text-center bg-indigo-900/40">September 2026</th>
+                        </tr>
+                        <!-- Day Grid Headers -->
+                        <tr class="bg-slate-900 text-slate-300 font-mono text-center text-xs divide-x divide-slate-800 border-b border-slate-800" id="headerDayRow">
+                            <th class="px-3 py-2 bg-slate-900 sticky left-0 z-20 text-center w-12 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">ID</th>
+                            <th class="px-4 py-2 bg-slate-900 sticky left-[48px] z-20 text-left min-w-[130px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Tanggal</th>
+                            <th class="px-5 py-2 bg-slate-900 sticky left-[178px] z-20 text-left min-w-[260px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Nama Kegiatan</th>
+                            <th class="px-4 py-2 bg-slate-900 sticky left-[438px] z-20 text-left min-w-[150px] shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]">Penanggung Jawab</th>
+                            <th class="px-4 py-2 bg-slate-900 sticky left-[588px] z-20 text-center min-w-[120px] shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)]">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                    <tbody id="ganttTableBody" class="divide-y divide-slate-100 text-sm font-medium">
                         <tr>
-                            <td colspan="6" class="text-center p-8 text-slate-400">
-                                <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Memuat data timeline...
+                            <td colspan="40" class="text-center p-8 text-slate-400">
+                                <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Mengambil data dari Google Sheets...
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Empty state fallback -->
+            <div id="emptyState" class="hidden flex flex-col items-center justify-center p-16 text-center text-slate-400">
+                <i class="fa-regular fa-folder-open text-5xl mb-3 text-slate-300"></i>
+                <p class="font-medium text-slate-500">Tidak ada kegiatan yang sesuai dengan pencarian Anda.</p>
+                <button onclick="clearAllFilters()" class="mt-4 px-4 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition">Atur Ulang Filter</button>
+            </div>
+        </main>
+
+        <!-- VIEW 2: RESPONSIVE CARDS VIEW -->
+        <main id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Dynamically populated card blocks -->
         </main>
     </div>
 
-   <script>
-        // API SheetDB Kamu
+    <!-- DYNAMIC POPUP MODAL (Add / Edit Kegiatan) -->
+    <div id="taskModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden">
+            <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
+                <h2 id="modalTitle" class="text-lg font-bold">Tambah / Edit Kegiatan KKN</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="taskForm" onsubmit="saveTask(event)" class="p-6 space-y-4">
+                <input type="hidden" id="taskId">
+                <input type="hidden" id="taskRowIndex">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kegiatan / Program Kerja</label>
+                    <textarea id="taskText" required rows="3" placeholder="Contoh: Silaturahmi dengan perangkat desa..." 
+                              class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Mulai Tanggal</label>
+                        <input type="date" id="taskStart" required min="2026-08-10" max="2026-09-13"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Hingga Tanggal</label>
+                        <input type="date" id="taskEnd" required min="2026-08-10" max="2026-09-13"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Penanggung Jawab (PIC)</label>
+                        <input type="text" id="taskPic" required placeholder="Contoh: Ketua, Humas"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Status Proker</label>
+                        <select id="taskStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                            <option value="Sedang Berlangsung">Sedang Berlangsung</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-6">
+                    <button type="button" id="deleteTaskBtn" onclick="deleteTask()" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                        <i class="fa-solid fa-trash mr-1.5"></i> Hapus Kegiatan
+                    </button>
+                    <div class="flex gap-2 ml-auto">
+                        <button type="button" onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/15 transition">
+                            Simpan Ke Google Sheets
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-800 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50">
+        <span class="flex h-2.5 w-2.5 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span id="toastMessage" class="text-xs font-semibold">Tugas berhasil diperbarui!</span>
+    </div>
+
+    <script>
+        // API SheetDB Online (Khusus Tab Sheet1)
         const SHEETDB_API_URL = "https://sheetdb.io/api/v1/ty95tyd8xmmra?sheet=Sheet1";
-        let currentDataLength = 0;
+        
+        let tasks = [];
+        const totalDates = [];
+
+        // Generate Dates range (Aug 10 - Sep 13, 2026)
+        function generateCalendarDates() {
+            totalDates.length = 0;
+            for (let d = 10; d <= 31; d++) {
+                totalDates.push({
+                    day: d,
+                    month: 8,
+                    dateString: `2026-08-${d.toString().padStart(2, '0')}`,
+                    fullText: `${d} Agst 2026`
+                });
+            }
+            for (let d = 1; d <= 13; d++) {
+                totalDates.push({
+                    day: d,
+                    month: 9,
+                    dateString: `2026-09-${d.toString().padStart(2, '0')}`,
+                    fullText: `${d} Sept 2026`
+                });
+            }
+        }
 
         window.onload = function() {
+            generateCalendarDates();
+            loadHeaderDays();
             fetchTasks();
         };
 
-        // 1. FUNGSI MENGAMBIL DATA DENGAN PENCARIAN KOLOM PINTAR
-        function fetchTasks() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Mengambil data dari Google Sheets...</td></tr>`;
-
-            fetch(SHEETDB_API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    tbody.innerHTML = '';
-                    if (!data || data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-400">Belum ada data di Google Sheets.</td></tr>`;
-                        currentDataLength = 0;
-                        return;
-                    }
-
-                    currentDataLength = data.length;
-
-                    data.forEach((item, index) => {
-                        // Membaca nilai dari SheetDB terlepas dari huruf kapital/spasi
-                        const idVal = item.id || item.Id || item.ID || item.No || item.no || (index + 1);
-                        const tglVal = item.tanggal || item.Tanggal || item.TANGGAL || item['No / Tanggal'] || '';
-                        const kegiatanVal = item.nama_kegiatan || item['Nama Kegiatan'] || item.kegiatan || item.Kegiatan || item['Informasi Kegiatan'] || '';
-                        const picVal = item.pic || item.PIC || item['Penanggung Jawab'] || item['Penanggungjawab'] || '';
-                        const statusVal = item.status || item.Status || item.STATUS || '';
-
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                        tr.innerHTML = `
-                            <td class="p-3.5 text-center font-mono text-slate-400 text-xs">${idVal}</td>
-                            <td class="p-3.5 font-semibold text-slate-600 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="tanggal-${index}">${tglVal}</td>
-                            <td class="p-3.5 font-bold text-slate-800 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="kegiatan-${index}">${kegiatanVal}</td>
-                            <td class="p-3.5 text-slate-600 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="pic-${index}">${picVal}</td>
-                            <td class="p-3.5 outline-none focus:bg-amber-50 focus:ring-1 focus:ring-amber-400 rounded" contenteditable="true" id="status-${index}">${statusVal}</td>
-                            <td class="p-3.5 text-center">
-                                <button onclick="saveRow('${idVal}', ${index})" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition shadow-md shadow-emerald-500/10 flex items-center justify-center mx-auto gap-1.5">
-                                    <i class="fa-solid fa-floppy-disk"></i> Simpan
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                })
-                .catch(err => {
-                    showNotif("Gagal memuat data dari SheetDB!", "error");
-                });
-        }
-
-        // 2. FUNGSI SIMPAN PERUBAHAN
-        function saveRow(id, index) {
-            const updatedData = {
-                tanggal: document.getElementById(`tanggal-${index}`).innerText.trim(),
-                nama_kegiatan: document.getElementById(`kegiatan-${index}`).innerText.trim(),
-                pic: document.getElementById(`pic-${index}`).innerText.trim(),
-                status: document.getElementById(`status-${index}`).innerText.trim()
-            };
-
-            showNotif("Menyimpan perubahan ke Google Sheets...", "info");
-
-            fetch(`${SHEETDB_API_URL}/id/${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ data: updatedData })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showNotif("Berhasil disimpan ke Google Sheets!", "success");
-            })
-            .catch(error => {
-                showNotif("Gagal menyimpan data!", "error");
+        function loadHeaderDays() {
+            const headerRow = document.getElementById('headerDayRow');
+            totalDates.forEach(date => {
+                const th = document.createElement('th');
+                th.className = 'gantt-col py-2 font-mono text-[10px] font-semibold text-center hover:bg-slate-800 transition-colors cursor-help';
+                th.innerText = date.day;
+                th.title = date.fullText;
+                headerRow.appendChild(th);
             });
         }
 
-        // HELPER NOTIFIKASI
-        function showNotif(msg, type) {
-            const notif = document.getElementById('statusNotif');
-            notif.innerText = msg;
-            notif.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800', 'bg-amber-100', 'text-amber-800');
+        // FETCH DATA ONLINE DARI GOOGLE SHEETS
+        function fetchTasks() {
+            const tbody = document.getElementById('ganttTableBody');
+            tbody.innerHTML = `<tr><td colspan="40" class="text-center p-8 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Mengambil data dari Google Sheets...</td></tr>`;
 
-            if (type === 'success') notif.classList.add('bg-emerald-100', 'text-emerald-800');
-            else if (type === 'error') notif.classList.add('bg-rose-100', 'text-rose-800');
-            else notif.classList.add('bg-amber-100', 'text-amber-800');
+            fetch(SHEETDB_API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        tasks = [];
+                    } else {
+                        // Smart parser untuk berbagai macam variasi nama kolom di Google Sheets
+                        tasks = data.map((item, index) => {
+                            const rawId = item.id || item.Id || item.ID || item.No || (index + 1);
+                            const rawTgl = item.tanggal || item.Tanggal || item.TANGGAL || '';
+                            const rawKegiatan = item.nama_kegiatan || item['Nama Kegiatan'] || item.kegiatan || '';
+                            const rawPic = item.pic || item.PIC || item['Penanggung Jawab'] || '';
+                            const rawStatus = item.status || item.Status || 'Belum Dikerjakan';
 
-            setTimeout(() => { notif.classList.add('hidden'); }, 4000);
+                            // Tentukan perkiraan tanggal mulai dan selesai dari string tanggal
+                            let start = "2026-08-10";
+                            let end = "2026-08-10";
+
+                            if (rawTgl.includes('Agst')) {
+                                const dayMatch = rawTgl.match(/\d+/g);
+                                if (dayMatch) {
+                                    start = `2026-08-${dayMatch[0].padStart(2, '0')}`;
+                                    end = dayMatch[1] ? `2026-08-${dayMatch[1].padStart(2, '0')}` : start;
+                                }
+                            } else if (rawTgl.includes('Sept')) {
+                                const dayMatch = rawTgl.match(/\d+/g);
+                                if (dayMatch) {
+                                    start = `2026-09-${dayMatch[0].padStart(2, '0')}`;
+                                    end = dayMatch[1] ? `2026-09-${dayMatch[1].padStart(2, '0')}` : start;
+                                }
+                            }
+
+                            return {
+                                id: rawId,
+                                rawDateText: rawTgl,
+                                start: start,
+                                end: end,
+                                text: rawKegiatan,
+                                pic: rawPic,
+                                status: rawStatus
+                            };
+                        });
+                    }
+                    renderTimeline();
+                })
+                .catch(err => {
+                    showToast("Gagal memuat data dari Google Sheets!", "error");
+                });
+        }
+
+        function isDateInSpan(checkedDate, startDate, endDate) {
+            const chk = new Date(checkedDate);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            return chk >= start && chk <= end;
+        }
+
+        // RENDER TABLE & CARDS
+        function renderTimeline() {
+            const tableBody = document.getElementById('ganttTableBody');
+            const cardsContainer = document.getElementById('cardsViewContainer');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const picFilter = document.getElementById('picFilter').value;
+            
+            tableBody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            const filteredTasks = tasks.filter(task => {
+                const matchesSearch = task.text.toLowerCase().includes(searchVal) || 
+                                      task.pic.toLowerCase().includes(searchVal) || 
+                                      task.rawDateText.toLowerCase().includes(searchVal);
+                const matchesPic = picFilter === 'all' || task.pic.toLowerCase().includes(picFilter.toLowerCase());
+                return matchesSearch && matchesPic;
+            });
+
+            if (filteredTasks.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('ganttTable').classList.add('opacity-50');
+            } else {
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('ganttTable').classList.remove('opacity-50');
+            }
+
+            filteredTasks.forEach((task, idx) => {
+                /* --- RENDER GANNT TABLE ROW --- */
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-amber-50/50 border-b border-slate-100 transition duration-150 cursor-pointer';
+                tr.onclick = () => openEditModal(task.id);
+
+                // No / ID
+                const tdId = document.createElement('td');
+                tdId.className = 'px-3 py-3 text-center text-slate-400 font-mono text-xs bg-white sticky left-0 z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]';
+                tdId.innerText = task.id;
+                tr.appendChild(tdId);
+
+                // Tanggal
+                const tdDate = document.createElement('td');
+                tdDate.className = 'px-4 py-3 text-slate-600 text-xs font-semibold bg-white sticky left-[48px] z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]';
+                tdDate.innerText = task.rawDateText || `${task.start} - ${task.end}`;
+                tr.appendChild(tdDate);
+
+                // Nama Kegiatan
+                const tdName = document.createElement('td');
+                tdName.className = 'px-5 py-3 text-slate-800 text-xs font-bold bg-white sticky left-[178px] z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)] truncate hover:whitespace-normal';
+                tdName.innerText = task.text;
+                tr.appendChild(tdName);
+
+                // PIC
+                const tdPic = document.createElement('td');
+                tdPic.className = 'px-4 py-3 bg-white sticky left-[438px] z-10 border-r border-slate-100 shadow-[2px_0_5px_-3px_rgba(0,0,0,0.1)]';
+                tdPic.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 border border-slate-200 text-slate-700">${task.pic}</span>`;
+                tr.appendChild(tdPic);
+
+                // Status
+                const tdStatus = document.createElement('td');
+                tdStatus.className = 'px-4 py-3 bg-white sticky left-[588px] z-10 border-r border-slate-100 shadow-[4px_0_10px_-3px_rgba(0,0,0,0.15)] text-center';
+                const statusColor = task.status === 'Selesai' ? 'bg-emerald-100 text-emerald-800' : (task.status === 'Sedang Berlangsung' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600');
+                tdStatus.innerHTML = `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${statusColor}">${task.status}</span>`;
+                tr.appendChild(tdStatus);
+
+                // Grid Cells / Gantt Bar
+                totalDates.forEach(dateObj => {
+                    const tdCell = document.createElement('td');
+                    tdCell.className = 'gantt-col border-r border-slate-100 p-1 text-center align-middle relative h-full';
+                    
+                    if (isDateInSpan(dateObj.dateString, task.start, task.end)) {
+                        const blockDiv = document.createElement('div');
+                        blockDiv.className = `bg-indigo-600 hover:bg-indigo-700 h-6 rounded-md shadow-sm transition-all duration-150 cursor-pointer flex items-center justify-center text-[8px] text-white font-bold`;
+                        blockDiv.title = `${task.text}\n(${task.rawDateText})\n[PIC: ${task.pic}]`;
+                        tdCell.appendChild(blockDiv);
+                    }
+                    tr.appendChild(tdCell);
+                });
+
+                tableBody.appendChild(tr);
+
+                /* --- RENDER CARD VIEW --- */
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl border border-slate-150 p-5 shadow-sm hover:shadow-md transition duration-150 flex flex-col justify-between cursor-pointer';
+                card.onclick = () => openEditModal(task.id);
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${statusColor}">
+                                ${task.status}
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-slate-400"></i> ${task.rawDateText}
+                            </span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 leading-snug mb-2">${task.text}</h4>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">PIC:</span>
+                        <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">${task.pic}</span>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // MODAL CONTROLLERS
+        function openAddModal() {
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+            document.getElementById('modalTitle').innerText = 'Tambah Kegiatan Online Baru';
+            document.getElementById('taskStart').value = '2026-08-10';
+            document.getElementById('taskEnd').value = '2026-08-10';
+            document.getElementById('deleteTaskBtn').classList.add('hidden');
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const task = tasks.find(t => t.id == id);
+            if (!task) return;
+
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskText').value = task.text;
+            document.getElementById('taskStart').value = task.start;
+            document.getElementById('taskEnd').value = task.end;
+            document.getElementById('taskPic').value = task.pic;
+            document.getElementById('taskStatus').value = task.status;
+            
+            document.getElementById('modalTitle').innerText = `Edit Kegiatan (ID: ${task.id})`;
+            document.getElementById('deleteTaskBtn').classList.remove('hidden');
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        // SIMPAN / EDIT KE GOOGLE SHEETS
+        function saveTask(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('taskId').value;
+            const text = document.getElementById('taskText').value.trim();
+            const start = document.getElementById('taskStart').value;
+            const end = document.getElementById('taskEnd').value;
+            const pic = document.getElementById('taskPic').value.trim();
+            const status = document.getElementById('taskStatus').value;
+
+            // Formatter Teks Tanggal untuk Google Sheets
+            const startDateObj = new Date(start);
+            const endDateObj = new Date(end);
+            const startDay = startDateObj.getDate();
+            const endDay = endDateObj.getDate();
+            const monthName = startDateObj.getMonth() === 7 ? "Agst" : "Sept";
+
+            let formattedDateText = `${startDay} ${monthName}`;
+            if (start !== end) {
+                formattedDateText = `${startDay}–${endDay} ${monthName}`;
+            }
+
+            const updatedData = {
+                tanggal: formattedDateText,
+                nama_kegiatan: text,
+                pic: pic,
+                status: status
+            };
+
+            showToast("Menyimpan ke Google Sheets...", "info");
+            closeModal();
+
+            if (id) {
+                // PATCH (EDIT)
+                fetch(`${SHEETDB_API_URL}/id/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: updatedData })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    showToast("Berhasil diperbarui di Google Sheets!");
+                    fetchTasks();
+                })
+                .catch(() => showToast("Gagal memperbarui data!", "error"));
+            } else {
+                // POST (TAMBAH BARU)
+                const newId = tasks.length > 0 ? Math.max(...tasks.map(t => parseInt(t.id) || 0)) + 1 : 1;
+                updatedData.id = newId;
+
+                fetch(SHEETDB_API_URL, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [updatedData] })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    showToast("Kegiatan baru berhasil ditambahkan!");
+                    fetchTasks();
+                })
+                .catch(() => showToast("Gagal menambah kegiatan!", "error"));
+            }
+        }
+
+        // HAPUS BARIS DI GOOGLE SHEETS
+        function deleteTask() {
+            const id = document.getElementById('taskId').value;
+            if (!id) return;
+
+            if (confirm(`Apakah Anda yakin ingin menghapus kegiatan ID ${id}?`)) {
+                showToast("Menghapus dari Google Sheets...", "info");
+                closeModal();
+
+                fetch(`${SHEETDB_API_URL}/id/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(() => {
+                    showToast("Kegiatan berhasil dihapus!");
+                    fetchTasks();
+                })
+                .catch(() => showToast("Gagal menghapus kegiatan!", "error"));
+            }
+        }
+
+        // CONTROLS & UTILS
+        function applyFilters() { renderTimeline(); }
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('picFilter').value = 'all';
+            renderTimeline();
+        }
+
+        function toggleView(viewType) {
+            const ganttBtn = document.getElementById('ganttViewBtn');
+            const cardsBtn = document.getElementById('cardsViewBtn');
+            const ganttCont = document.getElementById('ganttViewContainer');
+            const cardsCont = document.getElementById('cardsViewContainer');
+
+            if (viewType === 'gantt') {
+                ganttBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150';
+                cardsBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150';
+                ganttCont.classList.remove('hidden');
+                cardsCont.classList.add('hidden');
+            } else {
+                cardsBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 transition duration-150';
+                ganttBtn.className = 'px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition duration-150';
+                cardsCont.classList.remove('hidden');
+                ganttCont.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
         }
     </script>
 </body>
